@@ -135,21 +135,3 @@ Slide 9: Conclusion
 
 Summary
 
-Next steps
-
-Recommendations
-
-
-Hi Team,
-
-This is a follow-up regarding my pending Full and Final settlement. My last working day was 17th October 2025, and the settlement is still not credited despite my earlier email.
-
-Kindly look into this and share an update at the earliest.
-
-Regards,
-Yashwanth Reddy
-
-
-
-step: export slution
-import 
