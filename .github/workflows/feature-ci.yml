@@ -1,0 +1,56 @@
+name: Power Platform - Build Artifacts (Managed + Unmanaged)
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  SOLUTION_NAME: aSolution
+  SRC_DIR: solutions/aSolution/src
+  OUT_DIR: artifacts
+  UNMANAGED_ZIP: artifacts/aSolution_unmanaged.zip
+  MANAGED_ZIP: artifacts/aSolution_managed.zip
+
+jobs:
+  build_artifacts:
+    name: Pack Managed + Unmanaged Artifacts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Install Power Platform Tools
+        uses: microsoft/powerplatform-actions/actions-install@v1
+
+      - name: Create artifacts folder
+        run: mkdir -p "${{ env.OUT_DIR }}"
+
+      - name: Pack Solution (Unmanaged)
+        uses: microsoft/powerplatform-actions/pack-solution@v1
+        with:
+          solution-folder: ${{ env.SRC_DIR }}
+          solution-file: ${{ env.UNMANAGED_ZIP }}
+          solution-type: Unmanaged
+
+      - name: Pack Solution (Managed)
+        uses: microsoft/powerplatform-actions/pack-solution@v1
+        with:
+          solution-folder: ${{ env.SRC_DIR }}
+          solution-file: ${{ env.MANAGED_ZIP }}
+          solution-type: Managed
+
+      - name: Upload artifacts (managed + unmanaged)
+        uses: actions/upload-artifact@v4
+        with:
+          name: powerplatform-solutions-${{ env.SOLUTION_NAME }}-${{ github.run_number }}
+          path: |
+            ${{ env.UNMANAGED_ZIP }}
+            ${{ env.MANAGED_ZIP }}

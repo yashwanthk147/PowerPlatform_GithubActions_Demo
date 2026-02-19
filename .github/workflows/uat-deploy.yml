@@ -1,0 +1,122 @@
+name: Power Platform - Deploy Managed to TEST
+
+on:
+  workflow_run:
+    workflows:
+      - "Power Platform - Build Artifacts (Managed + Unmanaged)"
+    types:
+      - completed
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  SOLUTION_NAME: aSolution
+  ARTIFACT_DIR: artifacts
+  MANAGED_ZIP: artifacts/aSolution_managed.zip
+  TEST_SETTINGS_FILE: deploy/settings/test.json
+  UAT_SETTINGS: deploy/settings/uat.json
+  PROD_SETTINGS: deploy/settings/prod.json
+
+jobs:
+  deploy_test:
+    name: Deploy Managed Solution to TEST
+    runs-on: ubuntu-latest
+
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+
+    environment: test
+
+    steps:
+      - name: Checkout (for deployment settings file)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ env.ARTIFACT_DIR }}
+
+      - name: List downloaded files (debug)
+        run: |
+          echo "Downloaded files:"
+          ls -R ${{ env.ARTIFACT_DIR }}
+
+      - name: Import managed solution to TEST
+        uses: microsoft/powerplatform-actions/import-solution@v1
+        with:
+          environment-url: ${{ secrets.PP_TEST_ENV_URL }}
+          tenant-id: ${{ secrets.PP_TENANT_ID }}
+          app-id: ${{ secrets.PP_APP_ID }}
+          client-secret: ${{ secrets.PP_CLIENT_SECRET }}
+          solution-file: ${{ env.MANAGED_ZIP }}
+          publish-changes: true
+          overwrite-unmanaged-customizations: false
+          use-deployment-settings-file: true
+          deployment-settings-file: ${{ env.DEPLOYMENT_SETTINGS_FILE }}
+  
+  deploy_uat:
+    name: Deploy Managed Solution to UAT (Approval Gate)
+    runs-on: ubuntu-latest
+    needs: deploy_test
+    environment: uat
+
+    steps:
+      - name: Checkout (for deployment settings files)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ env.ARTIFACT_DIR }}
+
+      - name: Import managed solution to UAT
+        uses: microsoft/powerplatform-actions/import-solution@v1
+        with:
+          environment-url: ${{ secrets.PP_UAT_ENV_URL }}
+          tenant-id: ${{ secrets.PP_TENANT_ID }}
+          app-id: ${{ secrets.PP_APP_ID }}
+          client-secret: ${{ secrets.PP_CLIENT_SECRET }}
+          solution-file: ${{ env.MANAGED_ZIP }}
+          publish-changes: true
+          overwrite-unmanaged-customizations: false
+          use-deployment-settings-file: true
+          deployment-settings-file: ${{ env.UAT_SETTINGS }}
+
+  deploy_prod:
+    name: Deploy Managed Solution to PROD (Approval Gate)
+    runs-on: ubuntu-latest
+    needs: deploy_uat
+    environment: prod
+
+    steps:
+      - name: Checkout (for deployment settings files)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ env.ARTIFACT_DIR }}
+
+      - name: Import managed solution to PROD
+        uses: microsoft/powerplatform-actions/import-solution@v1
+        with:
+          environment-url: ${{ secrets.PP_PROD_ENV_URL }}
+          tenant-id: ${{ secrets.PP_TENANT_ID }}
+          app-id: ${{ secrets.PP_APP_ID }}
+          client-secret: ${{ secrets.PP_CLIENT_SECRET }}
+          solution-file: ${{ env.MANAGED_ZIP }}
+          publish-changes: true
+          overwrite-unmanaged-customizations: false
+          use-deployment-settings-file: true
+          deployment-settings-file: ${{ env.PROD_SETTINGS }}
+      
