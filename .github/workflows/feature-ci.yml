@@ -41,16 +41,34 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: Get Power Platform secrets from Key Vault
+        id: kv
+        uses: Azure/get-keyvault-secrets@v1
+        with:
+          keyvault: ${{ secrets.AZURE_KEYVAULT_NAME }}
+          secrets: |
+            PP-DEV-ENV-URL
+            PP-TENANT-ID
+            PP-APP-ID
+            PP-CLIENT-SECRET
+
       - name: Install Power Platform Tools
         uses: microsoft/powerplatform-actions/actions-install@v1
 
       - name: Export Solution (Managed)
         uses: microsoft/powerplatform-actions/export-solution@v1
         with:
-          environment-url: ${{ secrets.PP_DEV_ENV_URL }}
-          tenant-id: ${{ secrets.PP_TENANT_ID }}
-          app-id: ${{ secrets.PP_APP_ID }}
-          client-secret: ${{ secrets.PP_CLIENT_SECRET }}
+          environment-url: ${{ secrets.PP-DEV-ENV-URL }}
+          tenant-id: ${{ secrets.PP-TENANT-ID }}
+          app-id: ${{ secrets.PP-APP-ID }}
+          client-secret: ${{ secrets.PP-CLIENT-SECRET }}
           solution-name: aSolution
           managed: false
           solution-output-file: out/aSolution.zip

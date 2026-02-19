@@ -37,6 +37,24 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: Get Power Platform secrets from Key Vault
+        id: kv
+        uses: Azure/get-keyvault-secrets@v1
+        with:
+          keyvault: ${{ secrets.AZURE_KEYVAULT_NAME }}
+          secrets: |
+            PP-TEST-ENV-URL
+            PP-TENANT-ID
+            PP-APP-ID
+            PP-CLIENT-SECRET
+
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -50,15 +68,15 @@ jobs:
       - name: Import managed solution to TEST
         uses: microsoft/powerplatform-actions/import-solution@v1
         with:
-          environment-url: ${{ secrets.PP_TEST_ENV_URL }}
-          tenant-id: ${{ secrets.PP_TENANT_ID }}
-          app-id: ${{ secrets.PP_APP_ID }}
-          client-secret: ${{ secrets.PP_CLIENT_SECRET }}
+          environment-url: ${{ secrets.PP-TEST-ENV-URL }}
+          tenant-id: ${{ secrets.PP-TENANT-ID }}
+          app-id: ${{ secrets.PP-APP-ID }}
+          client-secret: ${{ secrets.PP-CLIENT-SECRET }}
           solution-file: ${{ env.MANAGED_ZIP }}
           publish-changes: true
           overwrite-unmanaged-customizations: false
           use-deployment-settings-file: true
-          deployment-settings-file: ${{ env.DEPLOYMENT_SETTINGS_FILE }}
+          deployment-settings-file: ${{ env.TEST_SETTINGS_FILE }}
   
   deploy_uat:
     name: Deploy Managed Solution to UAT (Approval Gate)
@@ -72,6 +90,24 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: Get Power Platform secrets from Key Vault
+        id: kv
+        uses: Azure/get-keyvault-secrets@v1
+        with:
+          keyvault: ${{ secrets.AZURE_KEYVAULT_NAME }}
+          secrets: |
+            PP-UAT-ENV-URL
+            PP-TENANT-ID
+            PP-APP-ID
+            PP-CLIENT-SECRET
+
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -80,10 +116,10 @@ jobs:
       - name: Import managed solution to UAT
         uses: microsoft/powerplatform-actions/import-solution@v1
         with:
-          environment-url: ${{ secrets.PP_UAT_ENV_URL }}
-          tenant-id: ${{ secrets.PP_TENANT_ID }}
-          app-id: ${{ secrets.PP_APP_ID }}
-          client-secret: ${{ secrets.PP_CLIENT_SECRET }}
+          environment-url: ${{ secrets.PP-UAT-ENV-URL }}
+          tenant-id: ${{ secrets.PP-TENANT-ID }}
+          app-id: ${{ secrets.PP-APP-ID }}
+          client-secret: ${{ secrets.PP-CLIENT-SECRET }}
           solution-file: ${{ env.MANAGED_ZIP }}
           publish-changes: true
           overwrite-unmanaged-customizations: false
@@ -101,6 +137,24 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: Get Power Platform secrets from Key Vault
+        id: kv
+        uses: Azure/get-keyvault-secrets@v1
+        with:
+          keyvault: ${{ secrets.AZURE_KEYVAULT_NAME }}
+          secrets: |
+            PP-PROD-ENV-URL
+            PP-TENANT-ID
+            PP-APP-ID
+            PP-CLIENT-SECRET
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -110,10 +164,10 @@ jobs:
       - name: Import managed solution to PROD
         uses: microsoft/powerplatform-actions/import-solution@v1
         with:
-          environment-url: ${{ secrets.PP_PROD_ENV_URL }}
-          tenant-id: ${{ secrets.PP_TENANT_ID }}
-          app-id: ${{ secrets.PP_APP_ID }}
-          client-secret: ${{ secrets.PP_CLIENT_SECRET }}
+          environment-url: ${{ secrets.PP-PROD-ENV-URL }}
+          tenant-id: ${{ secrets.PP-TENANT-ID }}
+          app-id: ${{ secrets.PP-APP-ID }}
+          client-secret: ${{ secrets.PP-CLIENT-SECRET }}
           solution-file: ${{ env.MANAGED_ZIP }}
           publish-changes: true
           overwrite-unmanaged-customizations: false
